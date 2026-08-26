@@ -1,0 +1,16 @@
+version: 2
+updates:
+  # Keep GitHub Actions up to date (grouped into a single weekly PR to avoid noise).
+  # npm version-update PRs are intentionally omitted for this large Electron app;
+  # npm vulnerabilities are still covered by Dependabot security alerts.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        patterns:
+          - "*"

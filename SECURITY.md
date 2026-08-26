@@ -1,11 +1,28 @@
-GitHub takes the security of our software products and services seriously, including the open source code repositories managed through our GitHub organizations, such as [GitHub](https://github.com/GitHub).
+# Security Policy
 
-If you believe you have found a security vulnerability in this GitHub-owned open source repository, you can report it to us in one of two ways.
+This is an **unofficial, community-maintained** Linux fork of GitHub Desktop,
+published by the Guys Inc team. It is not affiliated with or supported by
+GitHub, Inc.
 
-If the vulnerability you have found is *not* [in scope for the GitHub Bug Bounty Program](https://bounty.github.com/#scope) or if you do not wish to be considered for a bounty reward, please report the issue to us directly using [private vulnerability reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing/privately-reporting-a-security-vulnerability).
+## Reporting a vulnerability
 
-If the vulnerability you have found is [in scope for the GitHub Bug Bounty Program](https://bounty.github.com/#scope) and you would like for your finding to be considered for a bounty reward, please submit the vulnerability to us through [HackerOne](https://hackerone.com/github) in order to be eligible to receive a bounty award.
+If you discover a security vulnerability in this fork, please report it
+**privately** — do not open a public issue.
 
-**Please do not report security vulnerabilities through public GitHub issues, discussions, or pull requests.**
+- **Preferred:** GitHub's private vulnerability reporting on this repository
+  (**Security** tab → **Report a vulnerability**).
+- **Alternatively:** email **CJ@guysinc.org** with a description, impact, and
+  steps to reproduce (a proof-of-concept helps).
 
-Thanks for helping make GitHub safe for everyone.
+## Scope
+
+Please report issues specific to this fork — Linux packaging, the APT
+repository, build/signing, or Linux-only behavior. Vulnerabilities in upstream
+GitHub Desktop itself should be reported to
+[`desktop/desktop`](https://github.com/desktop/desktop).
+
+## What to expect
+
+- Acknowledgement within a few business days.
+- Updates as we investigate and prepare a fix.
+- Credit on resolution, unless you prefer to remain anonymous.
