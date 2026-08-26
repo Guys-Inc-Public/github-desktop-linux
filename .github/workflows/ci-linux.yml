@@ -1,6 +1,7 @@
 name: 'CI / Linux'
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - development
@@ -27,6 +28,9 @@ jobs:
           submodules: recursive
       - name: Package and test application in container
         uses: shiftkey/desktop-ubuntu-arm64-packaging@9be09c4b945873e6509baaf690d457aae08cf901
+        env:
+          DESKTOP_OAUTH_CLIENT_ID: ${{ secrets.DESKTOP_OAUTH_CLIENT_ID }}
+          DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.DESKTOP_OAUTH_CLIENT_SECRET }}
       - name: Upload output artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -49,6 +53,9 @@ jobs:
           submodules: recursive
       - name: Package and test application in container
         uses: shiftkey/desktop-ubuntu-arm-packaging@dd75ebc57f69fdb9319ab2b0fe11b253bb1ff2a4
+        env:
+          DESKTOP_OAUTH_CLIENT_ID: ${{ secrets.DESKTOP_OAUTH_CLIENT_ID }}
+          DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.DESKTOP_OAUTH_CLIENT_SECRET }}
       - name: Upload output artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -71,6 +78,9 @@ jobs:
           submodules: recursive
       - name: Package and test application in container
         uses: shiftkey/desktop-ubuntu-amd64-packaging@ea7b7a6a940a6b907b160b946439c5c7a516f9f1
+        env:
+          DESKTOP_OAUTH_CLIENT_ID: ${{ secrets.DESKTOP_OAUTH_CLIENT_ID }}
+          DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.DESKTOP_OAUTH_CLIENT_SECRET }}
       - name: Upload output artifacts
         uses: actions/upload-artifact@v4
         with:
