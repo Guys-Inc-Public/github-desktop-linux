@@ -129,15 +129,25 @@ describe('git/rev-parse', () => {
 directory=`
       )
 
-      process.env['HOME'] = testHomeDirectory
-      process.env['GIT_TEST_ASSUME_DIFFERENT_OWNER'] = '1'
+      try {
+        process.env['HOME'] = testHomeDirectory
+        process.env['GIT_TEST_ASSUME_DIFFERENT_OWNER'] = '1'
 
-      expect(await getRepositoryType(repository.path)).toMatchObject({
-        kind: 'unsafe',
-      })
+        expect(await getRepositoryType(repository.path)).toMatchObject({
+          kind: 'unsafe',
+        })
+      } finally {
+        // Both of these have to be *deleted* rather than assigned `undefined`:
+        // assigning to process.env coerces to the string 'undefined', which git
+        // then rejects with "bad boolean environment value".
+        delete process.env['GIT_TEST_ASSUME_DIFFERENT_OWNER']
 
-      process.env['GIT_TEST_ASSUME_DIFFERENT_OWNER'] = undefined
-      process.env['HOME'] = previousHomeValue
+        if (previousHomeValue === undefined) {
+          delete process.env['HOME']
+        } else {
+          process.env['HOME'] = previousHomeValue
+        }
+      }
     })
   })
 })
