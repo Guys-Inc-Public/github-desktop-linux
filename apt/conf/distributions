@@ -5,4 +5,4 @@ Suite: stable
 Architectures: amd64 arm64 armhf
 Components: main
 Description: Community APT repository for GitHub Desktop for Linux
-SignWith: 
+SignWith: 246FE9B7D018E7A8C90694AF173719DDADE2ACFE
