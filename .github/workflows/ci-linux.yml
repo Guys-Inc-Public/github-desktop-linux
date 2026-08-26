@@ -103,6 +103,8 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
       contents: write
+      id-token: write      # mint the short-lived Sigstore identity
+      attestations: write  # record the provenance attestation
     steps:
       - uses: actions/checkout@v4
 
@@ -120,6 +122,18 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R
         working-directory: './artifacts'
+
+      # Records "this exact binary was built by this workflow, from this
+      # commit" in a public transparency log. The signing identity is minted
+      # per-run and discarded, so there is no key to store or rotate.
+      # Verify with:  gh attestation verify <file> --owner Guys-Inc-Public
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            artifacts/**/*.AppImage
+            artifacts/**/*.deb
+            artifacts/**/*.rpm
 
       - name: Get tag name without prefix
         run: |
