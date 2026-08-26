@@ -6,6 +6,8 @@
 > **Ubuntu / Debian (`.deb`)** releases of GitHub Desktop for Linux — with AppImage,
 > Flatpak, and `.rpm` builds carried forward as well.
 >
+> **⚠️ Unofficial build.** GitHub Desktop for Linux is a community project and is **not affiliated with, endorsed by, or supported by GitHub, Inc.** “GitHub” and “GitHub Desktop” are trademarks of GitHub, Inc. This fork exists solely to provide Linux packages of the MIT-licensed source.
+>
 > - 📦 **Releases:** see the [Releases](https://github.com/Guys-Inc-Public/github-desktop-linux/releases) page
 > - 🐛 **Found a bug?** [Open an issue](https://github.com/Guys-Inc-Public/github-desktop-linux/issues)
 > - 🙏 **Credit:** huge thanks to [@shiftkey](https://github.com/shiftkey) and all prior
