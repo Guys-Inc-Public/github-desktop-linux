@@ -47,7 +47,44 @@ export async function setupFixtureRepository(
     await FSE.rename(submodule.path, newPath)
   }
 
+  await claimOwnershipOfFixture(testRepoPath)
+
   return testRepoPath
+}
+
+/**
+ * Node 22 (which ships in Electron 39) changed `fs.copyFile` so that a process
+ * running as root preserves the *source* file's ownership instead of taking
+ * ownership itself. Node 20 (Electron 32) took ownership.
+ *
+ * Our CI runs the packaging container as root while the checkout in
+ * /github/workspace is owned by the runner user, so from Electron 39 onwards
+ * the copied fixture is owned by that runner user. git then refuses to operate
+ * on it with "detected dubious ownership", failing the submodule/diff/status
+ * tests.
+ *
+ * Re-claiming the copy restores the pre-Node-22 invariant that a fixture is
+ * owned by whoever created it, rather than suppressing git's ownership check
+ * with a `safe.directory` entry (which would also mask genuine ownership bugs).
+ */
+async function claimOwnershipOfFixture(testRepoPath: string): Promise<void> {
+  // chown is a no-op concept on Windows, and only root can hand files between
+  // users, so there is nothing to do (and nothing permitted) elsewhere.
+  const { getuid, getgid } = process
+  if (getuid === undefined || getgid === undefined) {
+    return
+  }
+
+  const uid = getuid.call(process)
+  if (uid !== 0) {
+    return
+  }
+  const gid = getgid.call(process)
+
+  await FSE.chown(testRepoPath, uid, gid)
+  for (const entry of klawSync(testRepoPath)) {
+    await FSE.lchown(entry.path, uid, gid)
+  }
 }
 
 /**
