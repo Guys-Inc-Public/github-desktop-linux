@@ -50,6 +50,8 @@ type PullRequestReviewStatFieldSuffix =
 type PullRequestReviewStatField =
   `pullRequestReview${PullRequestReviewStatFieldInfix}${PullRequestReviewStatFieldSuffix}`
 
+import { telemetryDisabled } from '../telemetry'
+
 const StatsEndpoint = 'https://central.github.com/api/usage/desktop'
 
 /** The URL to the stats samples page. */
@@ -422,11 +424,13 @@ export interface IStatsStore {
 }
 
 const defaultPostImplementation = (body: Record<string, any>) =>
-  fetch(StatsEndpoint, {
-    method: 'POST',
-    headers: new Headers({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify(body),
-  })
+  telemetryDisabled
+    ? Promise.resolve(new Response(null, { status: 200 }))
+    : fetch(StatsEndpoint, {
+        method: 'POST',
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(body),
+      })
 
 /** The store for the app's stats. */
 export class StatsStore implements IStatsStore {

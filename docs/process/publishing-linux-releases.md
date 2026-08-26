@@ -7,8 +7,8 @@ This document assumes you have these remotes configured:
 
 ```
 $ git remote -v
-origin	https://github.com/shiftkey/desktop (fetch)
-origin	https://github.com/shiftkey/desktop (push)
+origin	https://github.com/Guys-Inc-Public/github-desktop-linux (fetch)
+origin	https://github.com/Guys-Inc-Public/github-desktop-linux (push)
 upstream	https://github.com/desktop/desktop (fetch)
 upstream	https://github.com/desktop/desktop (push)
 ```
@@ -143,7 +143,7 @@ $ git push --follow-tags
 After the tagged build completes, it will have the installers available as
 artifacts. Over on Azure Pipelines - switch to the Releases tab and run "Publish
 to Beta Channel" with the Snap release disabled
-([**#204**](https://github.com/shiftkey/desktop/issues/202) is the tracking
+([**#204**](https://github.com/Guys-Inc-Public/github-desktop-linux/issues/202) is the tracking
 issue for re-enabling that).
 
 When that is done, there should be a draft release available assigned to the tag

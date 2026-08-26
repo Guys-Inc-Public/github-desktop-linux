@@ -17,7 +17,7 @@
 
 # [GitHub Desktop](https://desktop.github.com) - The Linux Fork
 
-[![CI](https://github.com/shiftkey/desktop/actions/workflows/ci.yml/badge.svg)](https://github.com/shiftkey/desktop/actions/workflows/ci.yml)
+[![CI / Linux](https://github.com/Guys-Inc-Public/github-desktop-linux/actions/workflows/ci-linux.yml/badge.svg)](https://github.com/Guys-Inc-Public/github-desktop-linux/actions/workflows/ci-linux.yml)
 
 [GitHub Desktop](https://desktop.github.com/) is an open-source [Electron](https://www.electronjs.org/)-based
 GitHub app. It is written in [TypeScript](https://www.typescriptlang.org) and
@@ -40,7 +40,7 @@ uses [React](https://reactjs.org/).
 This repository contains specific patches on top of the upstream
 `desktop/desktop` repository to support Linux usage.
 
-It also publishes [releases](https://github.com/shiftkey/desktop/releases) for various Linux distributions:
+It also publishes [releases](https://github.com/Guys-Inc-Public/github-desktop-linux/releases) for various Linux distributions:
 
  - AppImage (`.AppImage`)
  - Debian (`.deb`)
@@ -53,23 +53,15 @@ keep it up to date on Debian and RPM-based distributions.
 
 ### Debian/Ubuntu
 
-There are two APT package feeds available, both hosted in the US. You only need
-to add one or the other here, as both of these are generated based on the
-releases from this repository.
-
-#### [@shiftkey](https://github.com/shiftkey) package feed
+Install the **Guys Inc** signing key and add the repository:
 
 ```sh
-wget -qO - https://apt.packages.shiftkey.dev/gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/shiftkey-packages.gpg > /dev/null
-sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/shiftkey-packages.gpg] https://apt.packages.shiftkey.dev/ubuntu/ any main" > /etc/apt/sources.list.d/shiftkey-packages.list'
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://apt.guysinc.org/guysinc-apt.gpg | sudo tee /etc/apt/keyrings/guysinc-apt.gpg > /dev/null
+echo "deb [signed-by=/etc/apt/keyrings/guysinc-apt.gpg] https://apt.guysinc.org stable main" | sudo tee /etc/apt/sources.list.d/guysinc-github-desktop.list
 ```
 
-#### [@mwt](https://github.com/mwt) package feed
-
-```sh
-wget -qO - https://mirror.mwt.me/shiftkey-desktop/gpgkey | gpg --dearmor | sudo tee /usr/share/keyrings/mwt-desktop.gpg > /dev/null
-sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/mwt-desktop.gpg] https://mirror.mwt.me/shiftkey-desktop/deb/ any main" > /etc/apt/sources.list.d/mwt-desktop.list'
-```
+The signing key fingerprint is `9129 8955 2DCD 86E6 9150 D032 753B 218B 25FE 5F74`.
 
 #### Installation
 

@@ -107,7 +107,7 @@ Other things to note about the Windows packaging process:
 
 ### Linux
 
-Refer to the [`shiftkey/desktop`](https://github.com/shiftkey/desktop) fork
+Refer to the [`Guys-Inc-Public/github-desktop-linux`](https://github.com/Guys-Inc-Public/github-desktop-linux) fork
 for packaging details about Linux.
 
 ## `script/publish.ts`

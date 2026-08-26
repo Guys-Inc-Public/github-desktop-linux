@@ -234,7 +234,7 @@ If you see an error that says "Not enough resources are available to process thi
 
 ### The PackageCloud package feed is no longer working
 
-The PackageCloud feed has been closed down. If you are seeing errors about this you should remove the configuration for this feed and refer to the [README](https://github.com/shiftkey/desktop#repositories)
+The PackageCloud feed has been closed down. If you are seeing errors about this you should remove the configuration for this feed and refer to the [README](https://github.com/Guys-Inc-Public/github-desktop-linux#repositories)
 for the new settings.
 
 #### APT configuration
@@ -286,4 +286,4 @@ Attempting to launch the shell from the application will show the error
 **Workarounds:** 
 
 - Option 1: install a second different terminal, switch to it, then switch to the terminal you want to use, and then uninstall the second terminal.
-- Option 2: open the application's developer tools and step through the JS calls to correctly set the shell. Further details at https://github.com/shiftkey/desktop/issues/344#issuecomment-1001287110
+- Option 2: open the application's developer tools and step through the JS calls to correctly set the shell. Further details at https://github.com/Guys-Inc-Public/github-desktop-linux/issues/344#issuecomment-1001287110

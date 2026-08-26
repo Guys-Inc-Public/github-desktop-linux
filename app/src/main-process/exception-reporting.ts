@@ -1,6 +1,7 @@
 import { app, net } from 'electron'
 import { getArchitecture } from '../lib/get-architecture'
 import { getMainGUID } from '../lib/get-main-guid'
+import { telemetryDisabled } from '../lib/telemetry'
 
 const ErrorEndpoint = 'https://central.github.com/api/desktop/exception'
 const NonFatalErrorEndpoint =
@@ -14,6 +15,11 @@ export async function reportError(
   extra?: { [key: string]: string },
   nonFatal?: boolean
 ) {
+  // Telemetry disabled in the Guys Inc build: never submit exception reports.
+  if (telemetryDisabled) {
+    return
+  }
+
   if (__DEV__) {
     return
   }
