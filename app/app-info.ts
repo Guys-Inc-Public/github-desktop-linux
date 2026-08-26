@@ -8,7 +8,6 @@ import { version, productName } from './package.json'
 const projectRoot = Path.dirname(__dirname)
 
 const devClientId = '3a723b10ac5575cc5bb9'
-const devClientSecret = '22c34d87789a365981ed921352a7b9a8c3f69d54'
 
 const channel = getChannel()
 
@@ -29,9 +28,6 @@ export function getReplacements() {
 
   return {
     __OAUTH_CLIENT_ID__: s(process.env.DESKTOP_OAUTH_CLIENT_ID || devClientId),
-    __OAUTH_SECRET__: s(
-      process.env.DESKTOP_OAUTH_CLIENT_SECRET || devClientSecret
-    ),
     __DARWIN__: process.platform === 'darwin',
     __WIN32__: process.platform === 'win32',
     __LINUX__: process.platform === 'linux',

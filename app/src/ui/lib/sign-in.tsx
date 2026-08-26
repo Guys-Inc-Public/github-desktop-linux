@@ -65,10 +65,16 @@ export class SignIn extends React.Component<ISignInProps, {}> {
   ) {
     const children = this.props.children as ReadonlyArray<JSX.Element>
 
+    // The existing-account warning step reuses this form but has no device
+    // flow of its own until the user proceeds.
+    const deviceFlow =
+      state.kind === SignInStep.Authentication ? state.deviceFlow : undefined
+
     return (
       <AuthenticationForm
         additionalButtons={children}
         onBrowserSignInRequested={this.onBrowserSignInRequested}
+        deviceFlow={deviceFlow}
       />
     )
   }

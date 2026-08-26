@@ -10,6 +10,7 @@ import {
   getUserAgent,
 } from './http'
 import { uuid } from './uuid'
+import { sleep } from './promise'
 import { GitProtocol } from './remote-parsing'
 import {
   getEndpointVersion,
@@ -93,11 +94,10 @@ interface IFetchAllOptions<T> {
 }
 
 const ClientID = process.env.TEST_ENV ? '' : __OAUTH_CLIENT_ID__
-const ClientSecret = process.env.TEST_ENV ? '' : __OAUTH_SECRET__
 
-if (!ClientID || !ClientID.length || !ClientSecret || !ClientSecret.length) {
+if (!ClientID || !ClientID.length) {
   log.warn(
-    `DESKTOP_OAUTH_CLIENT_ID and/or DESKTOP_OAUTH_CLIENT_SECRET is undefined. You won't be able to authenticate new users.`
+    `DESKTOP_OAUTH_CLIENT_ID is undefined. You won't be able to authenticate new users.`
   )
 }
 
@@ -634,11 +634,6 @@ export interface IAPIComment {
 }
 
 /** The server response when handling the OAuth callback (with code) to obtain an access token */
-interface IAPIAccessToken {
-  readonly access_token: string
-  readonly scope: string
-  readonly token_type: string
-}
 
 /** The response we receive from fetching mentionables. */
 interface IAPIMentionablesResponse {
@@ -1860,23 +1855,22 @@ export class API {
   }
 }
 
-export async function deleteToken(account: Account) {
-  try {
-    const creds = Buffer.from(`${ClientID}:${ClientSecret}`).toString('base64')
-    const response = await request(
-      account.endpoint,
-      null,
-      'DELETE',
-      `applications/${ClientID}/token`,
-      { access_token: account.token },
-      { Authorization: `Basic ${creds}` }
-    )
-
-    return response.status === 204
-  } catch (e) {
-    log.error(`deleteToken: failed with endpoint ${account.endpoint}`, e)
-    return false
-  }
+/**
+ * Sign out locally.
+ *
+ * Revoking a token server-side (`DELETE /applications/:client_id/token`)
+ * requires HTTP Basic auth with the client id *and* client secret. We
+ * deliberately no longer ship a client secret — see the OAuth device flow in
+ * `requestDeviceFlowVerification` — so the app cannot revoke on the user's
+ * behalf any more.
+ *
+ * The token is still forgotten locally. Users who want to invalidate it
+ * server-side can do so at https://github.com/settings/applications.
+ */
+export function forgetTokenLocally(account: Account) {
+  log.info(
+    `[api] signing out ${account.login}; the token is removed locally but cannot be revoked server-side without a client secret`
+  )
 }
 
 /** Fetch the user authenticated by the token. */
@@ -2000,21 +1994,110 @@ export function getAccountForEndpoint(
   return accounts.find(a => a.endpoint === endpoint) || null
 }
 
-export function getOAuthAuthorizationURL(
-  endpoint: string,
-  state: string
-): string {
-  const urlBase = getHTMLURL(endpoint)
-  const scope = encodeURIComponent(oauthScopes.join(' '))
-  return `${urlBase}/login/oauth/authorize?client_id=${ClientID}&scope=${scope}&state=${state}`
+/**
+ * The details the user needs in order to authorize this device, as returned by
+ * the first leg of the OAuth device flow.
+ */
+export interface IDeviceFlowVerification {
+  /** Opaque code identifying this device, used when polling for the token. */
+  readonly deviceCode: string
+  /** The short code the user types into the browser, e.g. `B4D3-764A`. */
+  readonly userCode: string
+  /** Where the user should go to enter `userCode`. */
+  readonly verificationURI: string
+  /** How long to wait between polls, in seconds. */
+  readonly intervalSeconds: number
+  /** How long the codes remain valid, in seconds. */
+  readonly expiresInSeconds: number
 }
 
-export async function requestOAuthToken(
+interface IAPIDeviceCode {
+  readonly device_code: string
+  readonly user_code: string
+  readonly verification_uri: string
+  readonly interval: number
+  readonly expires_in: number
+}
+
+/** The shape of a device-flow poll, which may be a token *or* an error. */
+interface IAPIDeviceAccessToken {
+  readonly access_token?: string
+  readonly error?: string
+  readonly error_description?: string
+}
+
+/** Raised when the user declines, or lets the code expire. */
+export class DeviceFlowError extends Error {
+  public constructor(public readonly code: string, description?: string) {
+    super(description || code)
+  }
+}
+
+/**
+ * Begin the OAuth device flow.
+ *
+ * Unlike the browser redirect flow this needs only the client id — there is no
+ * client secret involved at any point, so nothing confidential has to be
+ * shipped inside the application bundle.
+ */
+export async function requestDeviceFlowVerification(
+  endpoint: string
+): Promise<IDeviceFlowVerification> {
+  const urlBase = getHTMLURL(endpoint)
+  const response = await request(urlBase, null, 'POST', 'login/device/code', {
+    client_id: ClientID,
+    scope: oauthScopes.join(' '),
+  })
+
+  const result = await parsedResponse<IAPIDeviceCode & IAPIDeviceAccessToken>(
+    response
+  )
+
+  if (result.error !== undefined) {
+    throw new DeviceFlowError(result.error, result.error_description)
+  }
+
+  return {
+    deviceCode: result.device_code,
+    userCode: result.user_code,
+    verificationURI: result.verification_uri,
+    intervalSeconds: result.interval,
+    expiresInSeconds: result.expires_in,
+  }
+}
+
+/**
+ * Poll for the access token belonging to a device flow verification.
+ *
+ * Resolves once the user has authorized in their browser. `isCancelled` is
+ * consulted between polls so an abandoned sign-in stops hitting the API.
+ */
+export async function pollForDeviceFlowAccessToken(
   endpoint: string,
-  code: string
-): Promise<string | null> {
-  try {
-    const urlBase = getHTMLURL(endpoint)
+  verification: IDeviceFlowVerification,
+  isCancelled: () => boolean
+): Promise<string> {
+  const urlBase = getHTMLURL(endpoint)
+  const deadline = Date.now() + verification.expiresInSeconds * 1000
+
+  // The server can ask us to back off; keep our own interval so we can honour
+  // slow_down without hammering it.
+  let intervalMs = verification.intervalSeconds * 1000
+
+  while (!isCancelled()) {
+    await sleep(intervalMs)
+
+    if (isCancelled()) {
+      break
+    }
+
+    if (Date.now() > deadline) {
+      throw new DeviceFlowError(
+        'expired_token',
+        'The sign-in code expired before it was used. Please try again.'
+      )
+    }
+
     const response = await request(
       urlBase,
       null,
@@ -2022,18 +2105,36 @@ export async function requestOAuthToken(
       'login/oauth/access_token',
       {
         client_id: ClientID,
-        client_secret: ClientSecret,
-        code: code,
+        device_code: verification.deviceCode,
+        grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
       }
     )
+
     tryUpdateEndpointVersionFromResponse(endpoint, response)
 
-    const result = await parsedResponse<IAPIAccessToken>(response)
-    return result.access_token
-  } catch (e) {
-    log.warn(`requestOAuthToken: failed with endpoint ${endpoint}`, e)
-    return null
+    const result = await parsedResponse<IAPIDeviceAccessToken>(response)
+
+    if (result.access_token !== undefined) {
+      return result.access_token
+    }
+
+    switch (result.error) {
+      // The user simply hasn't finished in the browser yet.
+      case 'authorization_pending':
+        continue
+      // We polled too fast; GitHub asks for an extra five seconds.
+      case 'slow_down':
+        intervalMs += 5000
+        continue
+      default:
+        throw new DeviceFlowError(
+          result.error ?? 'unknown_error',
+          result.error_description
+        )
+    }
   }
+
+  throw new DeviceFlowError('cancelled', 'Sign in was cancelled.')
 }
 
 function tryUpdateEndpointVersionFromResponse(

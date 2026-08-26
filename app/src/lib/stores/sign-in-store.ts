@@ -11,13 +11,11 @@ import {
   fetchUser,
   getDotComAPIEndpoint,
   getEnterpriseAPIURL,
-  requestOAuthToken,
-  getOAuthAuthorizationURL,
+  requestDeviceFlowVerification,
+  pollForDeviceFlowAccessToken,
 } from '../../lib/api'
 
 import { TypedBaseStore } from './base-store'
-import uuid from 'uuid'
-import { IOAuthAction } from '../parse-app-url'
 import { shell } from '../app-shell'
 import noop from 'lodash/noop'
 import { AccountsStore } from './accounts-store'
@@ -123,11 +121,13 @@ export interface IAuthenticationState extends ISignInState {
 
   readonly resultCallback: (result: SignInResult) => void
 
-  readonly oauthState?: {
-    state: string
-    endpoint: string
-    onAuthCompleted: (account: Account) => void
-    onAuthError: (error: Error) => void
+  /**
+   * Set once the device flow has been started and we have a code for the user
+   * to enter in their browser. Absent until then.
+   */
+  readonly deviceFlow?: {
+    readonly userCode: string
+    readonly verificationURI: string
   }
 }
 
@@ -158,6 +158,13 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
   private state: SignInState | null = null
 
   private accounts: ReadonlyArray<Account> = []
+
+  /**
+   * Monotonic counter identifying the in-flight device flow. Bumped whenever a
+   * new sign-in starts or the store is reset, so a poll loop belonging to an
+   * older attempt can detect that it has been superseded and stop.
+   */
+  private deviceFlowAttempt = 0
 
   public constructor(private readonly accountStore: AccountsStore) {
     super()
@@ -211,13 +218,12 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
    * initial (no sign-in) state.
    */
   public reset() {
-    const currentState = this.state
     this.state?.resultCallback({ kind: 'cancelled' })
     this.setState(null)
 
-    if (currentState?.kind === SignInStep.Authentication) {
-      currentState.oauthState?.onAuthError(new Error('cancelled'))
-    }
+    // Invalidate any device flow currently polling so it stops on its next
+    // tick rather than resolving into a session the user has walked away from.
+    this.deviceFlowAttempt++
   }
 
   /**
@@ -284,80 +290,73 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
       }
     }
 
-    const csrfToken = uuid()
+    const { endpoint, resultCallback } = currentState
 
-    new Promise<Account>((resolve, reject) => {
-      const { endpoint, resultCallback } = currentState
-      log.info('[SignInStore] initializing OAuth flow')
+    // Identifies this particular attempt. reset() and any subsequent attempt
+    // bump the counter, which is how the poll loop below learns to give up.
+    const attempt = ++this.deviceFlowAttempt
+    const isCancelled = () =>
+      this.deviceFlowAttempt !== attempt ||
+      this.state?.kind !== SignInStep.Authentication
+
+    try {
+      log.info('[SignInStore] initializing OAuth device flow')
+
+      const verification = await requestDeviceFlowVerification(endpoint)
+
+      if (isCancelled()) {
+        return
+      }
+
       this.setState({
         kind: SignInStep.Authentication,
         endpoint,
         resultCallback,
         error: null,
         loading: true,
-        oauthState: {
-          state: csrfToken,
-          endpoint,
-          onAuthCompleted: resolve,
-          onAuthError: reject,
+        deviceFlow: {
+          userCode: verification.userCode,
+          verificationURI: verification.verificationURI,
         },
       })
-      shell.openExternal(getOAuthAuthorizationURL(endpoint, csrfToken))
-    })
-      .then(account => {
-        if (!this.state || this.state.kind !== SignInStep.Authentication) {
-          // Looks like the sign in flow has been aborted
-          log.warn('[SignInStore] account resolved but session has changed')
-          return
-        }
 
-        log.info('[SignInStore] account resolved')
-        this.emitAuthenticate(account)
-        this.setState({
-          kind: SignInStep.Success,
-          resultCallback: this.state.resultCallback,
-        })
-      })
-      .catch(e => {
-        // Make sure we're still in the same sign in session
-        if (
-          this.state?.kind === SignInStep.Authentication &&
-          this.state.oauthState?.state === csrfToken
-        ) {
-          log.info('[SignInStore] error with OAuth flow', e)
-          this.setState({ ...this.state, error: e, loading: false })
-        } else {
-          log.info(`[SignInStore] OAuth error but session has changed: ${e}`)
-        }
-      })
-  }
+      shell.openExternal(verification.verificationURI)
 
-  public async resolveOAuthRequest(action: IOAuthAction) {
-    if (!this.state || this.state.kind !== SignInStep.Authentication) {
-      return
-    }
-
-    if (!this.state.oauthState) {
-      return
-    }
-
-    if (this.state.oauthState.state !== action.state) {
-      log.warn(
-        'requestAuthenticatedUser was not called with valid OAuth state. This is likely due to a browser reloading the callback URL. Contact GitHub Support if you believe this is an error'
+      const token = await pollForDeviceFlowAccessToken(
+        endpoint,
+        verification,
+        isCancelled
       )
-      return
-    }
 
-    const { endpoint } = this.state
-    const token = await requestOAuthToken(endpoint, action.code)
-
-    if (token) {
       const account = await fetchUser(endpoint, token)
-      this.state.oauthState.onAuthCompleted(account)
-    } else {
-      this.state.oauthState.onAuthError(
-        new Error('Failed retrieving authenticated user')
-      )
+
+      if (isCancelled()) {
+        log.warn('[SignInStore] account resolved but session has changed')
+        return
+      }
+
+      log.info('[SignInStore] account resolved')
+      this.emitAuthenticate(account)
+      this.setState({
+        kind: SignInStep.Success,
+        resultCallback,
+      })
+    } catch (e) {
+      if (isCancelled()) {
+        log.info(
+          `[SignInStore] device flow error but session has changed: ${e}`
+        )
+        return
+      }
+
+      log.info('[SignInStore] error with OAuth device flow', e)
+      this.setState({
+        kind: SignInStep.Authentication,
+        endpoint,
+        resultCallback,
+        error: e instanceof Error ? e : new Error(`${e}`),
+        loading: false,
+      })
     }
   }
 
