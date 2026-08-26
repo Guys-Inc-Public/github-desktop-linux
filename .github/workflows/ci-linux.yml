@@ -16,6 +16,9 @@ on:
       - linux-vnext
       - 'linux-release-*'
 
+permissions:
+  contents: read
+
 jobs:
   arm64:
     name: Ubuntu arm64

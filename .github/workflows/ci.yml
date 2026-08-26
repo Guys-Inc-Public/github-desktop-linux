@@ -47,6 +47,9 @@ on:
 env:
   NODE_VERSION: 20.17.0
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint
