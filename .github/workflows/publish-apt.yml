@@ -1,0 +1,102 @@
+name: Publish APT repository
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish (e.g. release-3.4.9-linux1)'
+        required: true
+  release:
+    types: [published]
+
+concurrency:
+  group: publish-apt
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  GNUPGHOME: ${{ github.workspace }}/.gnupg
+  BUCKET: guysinc-apt
+
+jobs:
+  publish:
+    name: Sign & publish to apt.guysinc.org
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (reprepro conf + public key)
+        uses: actions/checkout@v4
+
+      - name: Install tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends reprepro gnupg awscli
+
+      - name: Import GPG signing subkey
+        env:
+          APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+        run: |
+          mkdir -p "$GNUPGHOME" && chmod 700 "$GNUPGHOME"
+          printf '%s' "$APT_GPG_PRIVATE_KEY" | gpg --batch --import
+          gpg --list-secret-keys --keyid-format=long
+
+      - name: Resolve release tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "tag=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download .deb assets from the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p incoming
+          gh release download "${{ steps.tag.outputs.tag }}" \
+            --repo "$GITHUB_REPOSITORY" --pattern '*.deb' --dir incoming
+          ls -la incoming
+
+      - name: Pull existing repo state from R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          mkdir -p repo
+          aws s3 sync "s3://$BUCKET" repo \
+            --endpoint-url "https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com" || true
+
+      - name: Prepare reprepro config
+        run: |
+          mkdir -p repo/conf
+          cp apt/conf/distributions repo/conf/distributions
+
+      - name: Include packages (signs Release / InRelease)
+        run: |
+          shopt -s nullglob
+          for deb in incoming/*.deb; do
+            echo "Adding $deb"
+            reprepro -b repo includedeb stable "$deb"
+          done
+          reprepro -b repo export
+          echo "--- repo contents ---"
+          reprepro -b repo list stable || true
+
+      - name: Publish the public key into the repo tree
+        run: |
+          cp apt/guysinc-apt.asc repo/guysinc-apt.asc
+          gpg --dearmor < apt/guysinc-apt.asc > repo/guysinc-apt.gpg
+
+      - name: Sync repository to R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          aws s3 sync repo "s3://$BUCKET" \
+            --endpoint-url "https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com" \
+            --no-progress
+          echo "Published to https://apt.guysinc.org/"
