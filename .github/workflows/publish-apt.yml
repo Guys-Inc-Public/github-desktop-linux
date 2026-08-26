@@ -89,6 +89,7 @@ jobs:
         run: |
           cp apt/guysinc-apt.asc repo/guysinc-apt.asc
           gpg --dearmor < apt/guysinc-apt.asc > repo/guysinc-apt.gpg
+          cp apt/index.html repo/index.html
 
       - name: Sync repository to R2
         env:

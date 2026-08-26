@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GitHub Desktop for Linux — Guys Inc</title>
+<meta name="description" content="An actively-maintained fork of GitHub Desktop for Linux, with signed Ubuntu/Debian (.deb) packages installable in one command." />
+<style>
+  :root{
+    --blue:#2f80c4; --teal:#37a6cf; --green:#74b53f;
+    --bg:#ffffff; --fg:#12181f; --muted:#5b6673; --card:#f4f7fa; --border:#e2e8f0; --code:#0d1b26; --codefg:#e6f1ff;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0d1117; --fg:#e6edf3; --muted:#9aa7b4; --card:#161b22; --border:#232b34; --code:#010409; --codefg:#e6f1ff; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg);line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:860px;margin:0 auto;padding:0 20px}
+  header{text-align:center;padding:64px 20px 8px}
+  header img{width:min(360px,80%);height:auto}
+  h1{font-size:clamp(1.9rem,5vw,2.9rem);margin:.4em 0 .2em;letter-spacing:-.02em}
+  .tag{font-size:clamp(1.05rem,2.6vw,1.3rem);color:var(--muted);margin:0 auto;max-width:600px}
+  .grad{background:linear-gradient(90deg,var(--blue),var(--teal),var(--green));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:28px 0 8px}
+  .btn{display:inline-block;padding:12px 22px;border-radius:10px;font-weight:600;text-decoration:none;border:1px solid var(--border)}
+  .btn.primary{background:linear-gradient(90deg,var(--blue),var(--teal));color:#fff;border:none}
+  .btn.ghost{color:var(--fg)}
+  section{padding:22px 0}
+  h2{font-size:1.35rem;margin:1.4em 0 .5em}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin:14px 0}
+  pre{background:var(--code);color:var(--codefg);border-radius:10px;padding:16px;overflow-x:auto;font-size:.9rem;margin:0}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+  .feat h3{margin:.2em 0 .3em;font-size:1.05rem}
+  .feat p{margin:0;color:var(--muted);font-size:.96rem}
+  .fp{font-family:ui-monospace,monospace;font-size:.82rem;color:var(--muted);word-break:break-all}
+  footer{border-top:1px solid var(--border);margin-top:40px;padding:28px 0 60px;color:var(--muted);font-size:.9rem;text-align:center}
+  footer a{color:var(--teal)}
+  .note{font-size:.86rem;color:var(--muted);text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <img src="https://pub-6411a182cd74411f895ed12f2ec01e80.r2.dev/guysinc-lockup-transparent.png" alt="Guys Inc" />
+  <h1>GitHub Desktop <span class="grad">for Linux</span></h1>
+  <p class="tag">The actively-maintained fork — signed Ubuntu &amp; Debian packages, installable and auto-updated in one command.</p>
+  <div class="btns">
+    <a class="btn primary" href="#install">Install</a>
+    <a class="btn ghost" href="https://github.com/Guys-Inc-Public/github-desktop-linux">View on GitHub</a>
+    <a class="btn ghost" href="https://github.com/Guys-Inc-Public/github-desktop-linux/releases">Download .deb / .rpm / AppImage</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <section id="install">
+    <h2>Install on Ubuntu / Debian</h2>
+    <div class="card">
+<pre><code>sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://apt.guysinc.pub/guysinc-apt.gpg | sudo tee /etc/apt/keyrings/guysinc-apt.gpg > /dev/null
+echo "deb [signed-by=/etc/apt/keyrings/guysinc-apt.gpg] https://apt.guysinc.pub stable main" | sudo tee /etc/apt/sources.list.d/guysinc-github-desktop.list
+sudo apt update &amp;&amp; sudo apt install github-desktop</code></pre>
+      <p class="note">You'll get updates automatically through <code>apt</code> from here on.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Why this build?</h2>
+    <div class="grid">
+      <div class="feat"><h3>🟢 Actively maintained</h3><p>The long-running community fork went quiet in 2025. This one is being kept current — starting where it left off.</p></div>
+      <div class="feat"><h3>🔐 Signed repository</h3><p>Packages are served from a GPG-signed APT repo, so <code>apt</code> verifies every update. No unsigned downloads.</p></div>
+      <div class="feat"><h3>📦 Every format</h3><p><code>.deb</code>, <code>.rpm</code>, and AppImage for x64 and ARM — pick what fits your distro.</p></div>
+      <div class="feat"><h3>🔑 Real sign-in</h3><p>Ships with its own OAuth app, so signing in to GitHub.com just works.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Verify the signing key</h2>
+    <div class="card">
+      <p style="margin:0 0 6px">Fingerprint of the repository signing key:</p>
+      <p class="fp">9129 8955 2DCD 86E6 9150 D032 753B 218B 25FE 5F74</p>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p><strong>Unofficial build.</strong> Not affiliated with, endorsed by, or supported by GitHub, Inc. “GitHub” and “GitHub Desktop” are trademarks of GitHub, Inc.</p>
+    <p>Built by the <a href="https://github.com/Guys-Inc-Public">Guys Inc</a> team, continuing the Linux work of <a href="https://github.com/shiftkey">@shiftkey</a>. MIT licensed.</p>
+  </div>
+</footer>
+</body>
+</html>
