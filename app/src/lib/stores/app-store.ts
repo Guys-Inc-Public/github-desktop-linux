@@ -104,7 +104,7 @@ import {
   IAPIFullRepository,
   IAPIComment,
   IAPIRepoRuleset,
-  deleteToken,
+  forgetTokenLocally,
 } from '../api'
 import { shell } from '../app-shell'
 import {
@@ -5916,7 +5916,13 @@ export class AppStore extends TypedBaseStore<IAppState> {
   }
 
   public _resolveOAuthRequest(action: IOAuthAction) {
-    return this.signInStore.resolveOAuthRequest(action)
+    // Sign in uses the OAuth *device* flow, which completes by polling rather
+    // than by a redirect back into the app, so there is nothing to resolve
+    // here. We still accept the callback because an older build (or a stale
+    // browser tab) may hand us one after an upgrade.
+    log.warn(
+      `[AppStore] ignoring x-github-desktop-auth callback for state ${action.state}; sign in now uses the OAuth device flow`
+    )
   }
 
   public _resetSignInState(): Promise<void> {
@@ -6005,7 +6011,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       `[AppStore] removing account ${account.login} (${account.name}) from store`
     )
     await this.accountsStore.removeAccount(account)
-    await deleteToken(account)
+    forgetTokenLocally(account)
   }
 
   private async _addAccount(account: Account): Promise<void> {

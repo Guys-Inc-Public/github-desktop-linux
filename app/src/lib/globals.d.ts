@@ -6,7 +6,6 @@ declare const __DEV__: boolean
 declare const __OAUTH_CLIENT_ID__: string | undefined
 
 /** The OAuth secret the app should use. */
-declare const __OAUTH_SECRET__: string | undefined
 
 /** Is the app being built to run on Darwin? */
 declare const __DARWIN__: boolean

@@ -33,7 +33,6 @@ jobs:
         uses: Guys-Inc-Public/desktop-ubuntu-arm64-packaging@5c78b91585368c3df0941dc90042015b882afb47
         env:
           DESKTOP_OAUTH_CLIENT_ID: ${{ secrets.DESKTOP_OAUTH_CLIENT_ID }}
-          DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.DESKTOP_OAUTH_CLIENT_SECRET }}
       - name: Upload output artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -58,7 +57,6 @@ jobs:
         uses: Guys-Inc-Public/desktop-ubuntu-arm-packaging@53be9dad4294deb31e472a135f4545a42880d28e
         env:
           DESKTOP_OAUTH_CLIENT_ID: ${{ secrets.DESKTOP_OAUTH_CLIENT_ID }}
-          DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.DESKTOP_OAUTH_CLIENT_SECRET }}
       - name: Upload output artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -83,7 +81,6 @@ jobs:
         uses: Guys-Inc-Public/desktop-ubuntu-amd64-packaging@b551a147f46ece79e199ba6f14e83be7fb569936
         env:
           DESKTOP_OAUTH_CLIENT_ID: ${{ secrets.DESKTOP_OAUTH_CLIENT_ID }}
-          DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.DESKTOP_OAUTH_CLIENT_SECRET }}
       - name: Upload output artifacts
         uses: actions/upload-artifact@v4
         with:
