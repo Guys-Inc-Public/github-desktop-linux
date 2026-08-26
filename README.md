@@ -57,8 +57,8 @@ Install the **Guys Inc** signing key and add the repository:
 
 ```sh
 sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://apt.guysinc.org/guysinc-apt.gpg | sudo tee /etc/apt/keyrings/guysinc-apt.gpg > /dev/null
-echo "deb [signed-by=/etc/apt/keyrings/guysinc-apt.gpg] https://apt.guysinc.org stable main" | sudo tee /etc/apt/sources.list.d/guysinc-github-desktop.list
+curl -fsSL https://apt.guysinc.pub/guysinc-apt.gpg | sudo tee /etc/apt/keyrings/guysinc-apt.gpg > /dev/null
+echo "deb [signed-by=/etc/apt/keyrings/guysinc-apt.gpg] https://apt.guysinc.pub stable main" | sudo tee /etc/apt/sources.list.d/guysinc-github-desktop.list
 ```
 
 The signing key fingerprint is `9129 8955 2DCD 86E6 9150 D032 753B 218B 25FE 5F74`.

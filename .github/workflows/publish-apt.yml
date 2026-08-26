@@ -22,7 +22,7 @@ env:
 
 jobs:
   publish:
-    name: Sign & publish to apt.guysinc.org
+    name: Sign & publish to apt.guysinc.pub
     runs-on: ubuntu-latest
     steps:
       - name: Checkout (reprepro conf + public key)
@@ -99,4 +99,4 @@ jobs:
           aws s3 sync repo "s3://$BUCKET" \
             --endpoint-url "https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com" \
             --no-progress
-          echo "Published to https://apt.guysinc.org/"
+          echo "Published to https://apt.guysinc.pub/"
