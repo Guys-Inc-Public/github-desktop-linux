@@ -1,3 +1,18 @@
+> ## 🐧 Guys Inc — GitHub Desktop for Linux
+>
+> This is an **actively-maintained community fork** that continues the excellent Linux
+> work of [`shiftkey/desktop`](https://github.com/shiftkey/desktop), which has been
+> inactive since mid-2025. Our focus is shipping regular, reliable
+> **Ubuntu / Debian (`.deb`)** releases of GitHub Desktop for Linux — with AppImage,
+> Flatpak, and `.rpm` builds carried forward as well.
+>
+> - 📦 **Releases:** see the [Releases](https://github.com/Guys-Inc-Public/github-desktop-linux/releases) page
+> - 🐛 **Found a bug?** [Open an issue](https://github.com/Guys-Inc-Public/github-desktop-linux/issues)
+> - 🙏 **Credit:** huge thanks to [@shiftkey](https://github.com/shiftkey) and all prior
+>   contributors for years of Linux packaging work this fork builds on.
+
+---
+
 # [GitHub Desktop](https://desktop.github.com) - The Linux Fork
 
 [![CI](https://github.com/shiftkey/desktop/actions/workflows/ci.yml/badge.svg)](https://github.com/shiftkey/desktop/actions/workflows/ci.yml)
