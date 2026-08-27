@@ -53,7 +53,7 @@ Our **signed APT repository** installs `github-desktop` and keeps it up to date 
 ```sh
 sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://apt.guysinc.pub/guysinc-apt.gpg | sudo tee /etc/apt/keyrings/guysinc-apt.gpg > /dev/null
-echo "deb [signed-by=/etc/apt/keyrings/guysinc-apt.gpg] https://apt.guysinc.pub stable main" | sudo tee /etc/apt/sources.list.d/guysinc-github-desktop.list
+echo "deb [signed-by=/etc/apt/keyrings/guysinc-apt.gpg] https://apt.guysinc.pub/github-desktop stable main" | sudo tee /etc/apt/sources.list.d/guysinc-github-desktop.list
 sudo apt update && sudo apt install github-desktop
 ```
 
