@@ -58,7 +58,7 @@ sudo apt update && sudo apt install github-desktop
 ```
 
 The repository is GPG-signed; the signing key fingerprint is
-`REPLACE_ME_PRIMARY_FPR_SPACED`.
+`F45B B6D3 4D82 EF56 BB97 FBE0 F305 FB33 592B 46C8`.
 
 ## Other distributions
 

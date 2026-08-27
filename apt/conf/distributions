@@ -5,4 +5,4 @@ Suite: stable
 Architectures: amd64 arm64 armhf
 Components: main
 Description: Community APT repository for GitHub Desktop for Linux
-SignWith: REPLACE_ME_SUBKEY_APT_FPR
+SignWith: 65B6F5564EAF3BC46D38867B10239ACC5F23DEEE
