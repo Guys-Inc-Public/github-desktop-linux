@@ -14,6 +14,8 @@
 - [Linux](#linux)
    - [I get a white screen when launching Desktop](#i-get-a-white-screen-when-launching-desktop)
    - [I cannot access repositories under my organization](#i-cannot-access-repositories-under-my-organization)
+   - [Signing in asks for a code instead of opening a sign-in page](#signing-in-asks-for-a-code-instead-of-opening-a-sign-in-page)
+   - [Signing out does not revoke access on github.com](#signing-out-does-not-revoke-access-on-githubcom)
    - [My shell/terminal is not detected and is stuck on "GNOME Terminal"](#my-shellterminal-is-not-detected-and-is-stuck-on-gnome-terminal)
 
 # Known Issues
@@ -258,22 +260,60 @@ Electron enables hardware accelerated graphics by default, but some graphics car
 
 ### I cannot access repositories under my organization
 
-The GitHub Desktop application is an OAuth application, but this fork does not
-have the same permissions as the app does on Windows and macOS, which manifests
-in a couple of different ways:
+This fork signs in through its own GitHub App, which does not hold the same
+permissions the official app has on Windows and macOS. That shows up in a couple
+of ways:
 
  - the "Clone a Repository" view does not show all organization repositories
  - pushes to a repository owned by an organization may be rejected with a
    generic error message
 
-The root cause of this is organizations by default will have "OAuth App access
-restrictions" enabled, which blocks the GitHub Desktop development app that is
-used by this fork.
+The cause is that an organization has not authorized this application to access
+its resources. Note that this is a GitHub *App*, not an OAuth App, so the
+organization setting involved is **not** "OAuth App access restrictions" and the
+approval flow is a different one — a point worth making because the two are
+easily confused and the OAuth App screens will not list this application.
 
-**Workaround:** ask your organization admin to [approve access](https://docs.github.com/en/organizations/restricting-access-to-your-organizations-data/approving-oauth-apps-for-your-organization)
-to the GitHub Desktop development app. 
+**Workaround:** request access from your organization owner, then ask them to
+approve it under the organization's **Settings → Third-party Access → GitHub
+Apps**. GitHub's guide is
+[requesting a GitHub App from your organization owner](https://docs.github.com/en/apps/using-github-apps/requesting-a-github-app-from-your-organization-owner);
+[authorizing GitHub Apps](https://docs.github.com/en/apps/using-github-apps/authorizing-github-apps)
+covers what you are granting.
 
-If you have not requested the GitHub Desktop development app for this organization, [follow these instructions first](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-your-membership-in-organizations/requesting-organization-approval-for-oauth-apps).
+### Signing in asks for a code instead of opening a sign-in page
+
+This is expected from 3.4.10 onwards, and is not an error.
+
+Desktop now signs in using the OAuth **device flow**: it shows a one-time code,
+you open the link in a browser, enter the code, and approve the request. The
+sign-in page no longer opens automatically and hands a token back to the
+application.
+
+The reason is that the previous flow required the application to hold an OAuth
+client secret, and a desktop application cannot keep a secret — anything shipped
+inside a `.deb` is readable by whoever downloads it. Earlier builds did ship
+one. The device flow needs no secret, so there is nothing in the package worth
+extracting.
+
+If the code expires before you finish, Desktop will issue a new one; codes are
+short-lived by design.
+
+### Signing out does not revoke access on github.com
+
+Signing out removes the token from your machine. It does **not** revoke that
+token on github.com, so the authorization remains listed in your account until
+you remove it there.
+
+This is a consequence of the change described above. Revoking a token through
+the API requires the client secret that this application deliberately no longer
+has. The same limitation applies to the GitHub CLI, for the same reason.
+
+**To revoke access properly:** go to
+[github.com/settings/applications](https://github.com/settings/applications),
+find the application, and revoke it. Do this rather than relying on sign-out if
+you are handing the machine to someone else, or if you believe the token has
+been exposed.
 
 ### My shell/terminal is not detected and is stuck on GNOME Terminal
 

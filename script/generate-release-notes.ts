@@ -142,6 +142,11 @@ function getReleaseGroups(version: string): ReleaseNotesGroups {
 
   const releaseEntryExternalContributor = /\[(.*)\](.*)- (.*)\. Thanks (.*)!/
   const releaseEntryRegex = /\[(.*)\](.*)- (.*)/
+  // An entry describing a change made in this fork has no upstream issue to
+  // point at, so it carries no "- #1234" tail. Without this it matches nothing
+  // and the note is dropped with only a warning, which means a release can be
+  // published with an empty body and a green run.
+  const releaseEntryNoIds = /^\[([^\]]+)\]\s*(.+)$/
 
   for (const entry of changelogForVersion) {
     const externalMatch = releaseEntryExternalContributor.exec(entry)
@@ -175,7 +180,16 @@ function getReleaseGroups(version: string): ReleaseNotesGroups {
           })
         }
       } else {
-        console.warn(`release entry does not match any format: '${entry}'`)
+        const plain = releaseEntryNoIds.exec(entry)
+        const plainCategory = plain ? parseCategory(plain[1]) : null
+        if (plain && plainCategory) {
+          releaseNotesByGroup[plainCategory].push({
+            text: plain[2].trim(),
+            ids: [],
+          })
+        } else {
+          console.warn(`release entry does not match any format: '${entry}'`)
+        }
       }
     }
   }
@@ -191,7 +205,10 @@ function formatReleaseNote(note: ReleaseNoteEntry): string {
     ? `. Thanks ${note.contributor}!`
     : ''
 
-  const template = ` - ${note.text} - ${idsAsUrls}${contributorNote}`
+  const template =
+    note.ids.length === 0
+      ? ` - ${note.text}${contributorNote}`
+      : ` - ${note.text} - ${idsAsUrls}${contributorNote}`
 
   return template.trim()
 }
