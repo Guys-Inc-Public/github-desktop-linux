@@ -95,13 +95,34 @@ jobs:
           gpg --dearmor < apt/guysinc-apt.asc > repo/guysinc-apt.gpg
           cp apt/index.html repo/index.html
 
+      - name: Remove previously published working state from the bucket
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          # Earlier runs synced the whole working directory, so reprepro's Berkeley
+          # DB and its config were served publicly. The sync below now excludes
+          # them, but `aws s3 sync` never deletes, so the old objects need removing
+          # once. Harmless to repeat.
+          for prefix in db conf; do
+            aws s3 rm "s3://$BUCKET/$prefix" --recursive \
+              --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          done
+
       - name: Sync repository to R2
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: auto
         run: |
+          # conf/ and db/ are reprepro's own working state. They are needed on
+          # disk for the commands above and have no business in a public bucket:
+          # anyone mirroring the repository would copy them.
           aws s3 sync repo "s3://$BUCKET" \
             --endpoint-url "https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com" \
+            --exclude 'conf/*' --exclude 'db/*' \
             --no-progress
           echo "Published to https://apt.guysinc.pub/"
