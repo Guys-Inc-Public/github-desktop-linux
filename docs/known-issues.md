@@ -283,7 +283,7 @@ covers what you are granting.
 
 ### Signing in asks for a code instead of opening a sign-in page
 
-This is expected from 3.4.10 onwards, and is not an error.
+This is expected from 3.5.0 onwards, and is not an error.
 
 Desktop now signs in using the OAuth **device flow**: it shows a one-time code,
 you open the link in a browser, enter the code, and approve the request. The
