@@ -19,6 +19,12 @@ permissions:
 env:
   GNUPGHOME: ${{ github.workspace }}/.gnupg
   BUCKET: guysinc-apt
+  # The repository lives under a per-project prefix so that each project keeps
+  # its own dists/ and pool/, signed by its own subkey. An apt repository has
+  # exactly one signing key, so sharing one across projects would force every
+  # project's CI to hold the same key - which is what the per-project subkeys
+  # exist to avoid. Key and landing page stay at the bucket root, shared.
+  PREFIX: github-desktop
 
 jobs:
   publish:
@@ -70,7 +76,7 @@ jobs:
           AWS_DEFAULT_REGION: auto
         run: |
           mkdir -p repo
-          aws s3 sync "s3://$BUCKET" repo \
+          aws s3 sync "s3://$BUCKET/$PREFIX" repo \
             --endpoint-url "https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com" || true
 
       - name: Prepare reprepro config
@@ -91,9 +97,31 @@ jobs:
 
       - name: Publish the public key into the repo tree
         run: |
-          cp apt/guysinc-apt.asc repo/guysinc-apt.asc
-          gpg --dearmor < apt/guysinc-apt.asc > repo/guysinc-apt.gpg
-          cp apt/index.html repo/index.html
+          mkdir -p shared
+          cp apt/guysinc-apt.asc shared/guysinc-apt.asc
+          gpg --dearmor < apt/guysinc-apt.asc > shared/guysinc-apt.gpg
+          cp apt/index.html shared/index.html
+
+      - name: Remove previously published working state from the bucket
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          # Earlier runs synced the whole working directory, so reprepro's Berkeley
+          # DB and its config were served publicly. The sync below now excludes
+          # them, but `aws s3 sync` never deletes, so the old objects need removing
+          # once. Harmless to repeat.
+          # db/ and conf/ are reprepro's working state, published by earlier runs.
+          # dists/ and pool/ at the bucket ROOT are the pre-prefix layout, replaced
+          # by $PREFIX/. Nothing has ever been installed against the old paths, so
+          # removing them breaks no one - and this is the only moment that is true.
+          for stale in db conf dists pool; do
+            aws s3 rm "s3://$BUCKET/$stale" --recursive \
+              --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          done
 
       - name: Sync repository to R2
         env:
@@ -101,7 +129,16 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: auto
         run: |
-          aws s3 sync repo "s3://$BUCKET" \
+          # conf/ and db/ are reprepro's own working state. They are needed on
+          # disk for the commands above and have no business in a public bucket:
+          # anyone mirroring the repository would copy them.
+          aws s3 sync repo "s3://$BUCKET/$PREFIX" \
+            --endpoint-url "https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com" \
+            --exclude 'conf/*' --exclude 'db/*' \
+            --no-progress
+          # Public key and landing page are shared across every project's
+          # repository, so they sit at the root rather than inside one prefix.
+          aws s3 sync shared "s3://$BUCKET" \
             --endpoint-url "https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com" \
             --no-progress
-          echo "Published to https://apt.guysinc.pub/"
+          echo "Published to https://apt.guysinc.pub/${PREFIX}/"
