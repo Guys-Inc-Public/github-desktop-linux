@@ -76,8 +76,21 @@ sudo apt update &amp;&amp; sudo apt install github-desktop</code></pre>
   <section>
     <h2>Verify the signing key</h2>
     <div class="card">
-      <p style="margin:0 0 6px">Fingerprint of the repository signing key:</p>
+      <p style="margin:0 0 6px">Fingerprint of the primary key — this is the one to check:</p>
       <p class="fp">F45B B6D3 4D82 EF56 BB97 FBE0 F305 FB33 592B 46C8</p>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:.92rem"><code>gpg --show-keys</code> will also list signing subkeys, one per project, and it is a
+      subkey that actually signs this repository. The primary certifies them, stays offline, and does not change when a
+      subkey is rotated — so it is the fingerprint worth writing down.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>How this repository is built</h2>
+    <div class="card">
+      <p style="margin:0 0 6px">Nothing here is hand-rolled per release. The signing and publishing steps are being extracted into
+      <a href="https://github.com/Guys-Inc-Public/archivist">archivist</a> — an MIT-licensed tool that turns a directory of
+      <code>.deb</code> files into a signed apt repository on storage you own. It is still pre-release; if you want the same setup
+      for your own project, follow along there.</p>
     </div>
   </section>
 </div>

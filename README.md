@@ -57,8 +57,27 @@ echo "deb [signed-by=/etc/apt/keyrings/guysinc-apt.gpg] https://apt.guysinc.pub/
 sudo apt update && sudo apt install github-desktop
 ```
 
-The repository is GPG-signed; the signing key fingerprint is
+The repository is GPG-signed; the fingerprint to verify is
 `F45B B6D3 4D82 EF56 BB97 FBE0 F305 FB33 592B 46C8`.
+
+That is the *primary* key. `gpg --show-keys` will also list signing subkeys — one per
+project — and it is a subkey that signs this repository. The primary certifies the
+subkeys, stays offline, and survives their rotation, which is why it is the one
+published here.
+
+### How the repository is published
+
+The signing and publishing half of this pipeline is being extracted into
+**[archivist](https://github.com/Guys-Inc-Public/archivist)**, a separate MIT-licensed
+project: point it at a directory of `.deb` files and get a signed apt repository on
+storage you own. If you have been putting loose `.deb` files on a Releases page because
+`reprepro`, GPG-in-CI and repository metadata looked like too much work, that is the
+problem it exists to remove.
+
+It is **pre-release** — the design and the decision records are written down, the CLI is
+not finished, and this repository still publishes with `reprepro` directly today. Nothing
+to install yet; the [roadmap](https://github.com/Guys-Inc-Public/archivist/blob/main/docs/Roadmap.md)
+is the honest status.
 
 ## Other distributions
 
