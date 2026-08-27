@@ -134,6 +134,38 @@ jobs:
           mkdir -p repo/conf
           cp apt/conf/distributions repo/conf/distributions
 
+      - name: Rebuild the package database from the pulled pool
+        run: |
+          set -euo pipefail
+          # reprepro's db/ is its own working state and is deliberately not
+          # published - earlier runs served it publicly, and the sync now
+          # excludes it. But `export` writes dists/ from the *database*, not
+          # from the pool, and the database is the one thing the pull cannot
+          # bring back. Every run therefore starts with an empty db and
+          # regenerates the indexes from only what it included itself.
+          #
+          # Today that is invisible: all three architectures ship in one run,
+          # and reprepro keeps a single version per package anyway. It stops
+          # being invisible the moment a run publishes a subset - one
+          # architecture failing to build, a re-publish of a single asset, or a
+          # second package in the repository. Measured: publish both arches at
+          # 3.4.9, then amd64 only at 3.4.10, and arm64's index comes back
+          # *empty* while the run stays green. That is the same failure the
+          # state-pull guard above exists to prevent, arriving by another route.
+          #
+          # So reconstruct the database from what the bucket already holds,
+          # before adding anything new. reprepro exits 0 and skips a package it
+          # already has, so this is safe to repeat, and it does not remove the
+          # pool file it is reading from.
+          restored=0
+          if [ -d repo/pool ]; then
+            while IFS= read -r -d '' deb; do
+              reprepro -b repo includedeb stable "$deb"
+              restored=$((restored + 1))
+            done < <(find repo/pool -name '*.deb' -type f -print0 | sort -z)
+          fi
+          echo "restored $restored package(s) from the pool"
+
       - name: Include packages (signs Release / InRelease)
         run: |
           shopt -s nullglob
@@ -142,6 +174,35 @@ jobs:
             reprepro -b repo includedeb stable "$deb"
           done
           reprepro -b repo export
+
+      - name: Check every architecture is still listed
+        run: |
+          set -euo pipefail
+          # The failure this guards against is silent by construction: an empty
+          # index is a valid, correctly signed index. Nothing downstream can
+          # tell it from a repository that genuinely has no packages, so the
+          # check belongs here, while the pool is still around to compare with.
+          architectures=$(awk -F': *' '/^Architectures:/ {print $2}' repo/conf/distributions)
+          suite=$(awk -F': *' '/^Codename:/ {print $2}' repo/conf/distributions)
+          failed=0
+          for arch in $architectures; do
+            index="repo/dists/${suite}/main/binary-${arch}/Packages"
+            # grep -c prints 0 *and* exits 1 when a file has no matches, so a
+            # `|| echo 0` fallback appends a second count and the comparison
+            # below silently stops working. Ask about the file first.
+            listed=0
+            if [ -f "$index" ]; then
+              listed=$(grep -c '^Package:' "$index" || true)
+            fi
+            pooled=$(find repo/pool \( -name "*_${arch}.deb" -o -name '*_all.deb' \) -type f | wc -l)
+            echo "${arch}: ${listed} listed, ${pooled} in pool"
+            if [ "$pooled" -gt 0 ] && [ "$listed" -eq 0 ]; then
+              echo "::error::${arch} has ${pooled} package(s) in the pool but an empty index."
+              echo "::error::Publishing this would unlist every ${arch} package."
+              failed=1
+            fi
+          done
+          [ "$failed" -eq 0 ]
           echo "--- repo contents ---"
           reprepro -b repo list stable || true
 
