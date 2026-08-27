@@ -77,7 +77,12 @@ sudo apt update &amp;&amp; sudo apt install github-desktop</code></pre>
     <h2>Verify the signing key</h2>
     <div class="card">
       <p style="margin:0 0 6px">Fingerprint of the repository signing key:</p>
-      <p class="fp">9129 8955 2DCD 86E6 9150 D032 753B 218B 25FE 5F74</p>
+      <p class="fp">REPLACE_ME_PRIMARY_FPR_SPACED</p>
+      <p style="margin:14px 0 6px"><strong>Installed before REPLACE_ME_ROTATION_DATE?</strong>
+         The signing key was rotated. Refresh your copy, otherwise
+         <code>apt update</code> will report a signature error:</p>
+<pre><code>curl -fsSL https://apt.guysinc.pub/guysinc-apt.gpg | sudo tee /etc/apt/keyrings/guysinc-apt.gpg > /dev/null
+sudo apt update</code></pre>
     </div>
   </section>
 </div>

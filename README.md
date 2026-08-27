@@ -58,7 +58,16 @@ sudo apt update && sudo apt install github-desktop
 ```
 
 The repository is GPG-signed; the signing key fingerprint is
-`9129 8955 2DCD 86E6 9150 D032 753B 218B 25FE 5F74`.
+`REPLACE_ME_PRIMARY_FPR_SPACED`.
+
+> [!IMPORTANT]
+> **The signing key was rotated on REPLACE_ME_ROTATION_DATE.** If you installed before
+> then, refresh your keyring or `apt update` will fail with a signature error:
+>
+> ```sh
+> curl -fsSL https://apt.guysinc.pub/guysinc-apt.gpg | sudo tee /etc/apt/keyrings/guysinc-apt.gpg > /dev/null
+> sudo apt update
+> ```
 
 ## Other distributions
 
