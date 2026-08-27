@@ -1,5 +1,15 @@
 {
   "releases": {
+    "3.4.10": [
+      "[Added] Sign in to GitHub.com using the OAuth device flow: Desktop shows a one-time code to enter in your browser, instead of handing off through a redirect",
+      "[Fixed] The published packages no longer contain an OAuth client secret. Desktop authenticates as a public client, so no secret is built into the application",
+      "[Improved] Upgrade Electron to v39.8.10, from v32.1.2, picking up seven major versions of Chromium security fixes",
+      "[Improved] Upgrade DOMPurify to v3, which sanitises rendered Markdown in the application",
+      "[Improved] Pin patched versions of tar-fs, cross-spawn, ansi-regex and @babel/runtime in the packaged application",
+      "[Improved] Release binaries now carry a build provenance attestation, so a download can be traced to the workflow run that produced it",
+      "[Improved] The APT repository is signed with a rotated key, and published under a per-project prefix at apt.guysinc.pub/github-desktop",
+      "[Removed] Signing out no longer revokes the token on github.com. Revoking a server-side token required a client secret, which is no longer shipped; sign out now discards the token locally. Revoke access at github.com/settings/applications"
+    ],
     "3.4.9": [
       "[Fixed] App no longer crash for first time users going through the welcome flow and attempting to sign in more than once - #19442",
       "[Fixed] Files configured to use the binary merge driver are now treated as binary files when resolving conflicts - #9846",
