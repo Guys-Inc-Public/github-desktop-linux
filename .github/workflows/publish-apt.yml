@@ -46,9 +46,38 @@ jobs:
       - name: Import GPG signing subkey
         env:
           APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+          APT_GPG_PASSPHRASE: ${{ secrets.APT_GPG_PASSPHRASE }}
         run: |
+          set -euo pipefail
           mkdir -p "$GNUPGHOME" && chmod 700 "$GNUPGHOME"
+          printf 'allow-preset-passphrase\nallow-loopback-pinentry\n' > "$GNUPGHOME/gpg-agent.conf"
           printf '%s' "$APT_GPG_PRIVATE_KEY" | gpg --batch --import
+          gpgconf --kill gpg-agent || true
+          gpgconf --launch gpg-agent
+
+          # reprepro signs through gpgme, which has no way to be handed a
+          # passphrase - it can only ask an agent. With no TTY in CI that ends as
+          # "Pinentry: Inappropriate ioctl for device" and a failed export. So
+          # prime the agent up front with the signing subkey's keygrip instead.
+          if [ -n "${APT_GPG_PASSPHRASE:-}" ]; then
+            KEYGRIP=$(gpg --batch --with-keygrip --list-secret-keys --with-colons \
+                      | awk -F: '$1=="ssb"{s=1;next} s&&$1=="grp"{print $10; s=0}')
+            if [ -z "$KEYGRIP" ]; then
+              echo "::error::No signing subkey found in the imported secret."
+              exit 1
+            fi
+            printf '%s' "$APT_GPG_PASSPHRASE" \
+              | /usr/lib/gnupg/gpg-preset-passphrase --preset "$KEYGRIP"
+          fi
+
+          # Only a signing subkey belongs in CI. A stubbed primary and a real one
+          # both report caps=cSC in field 12; field 15 is what separates them,
+          # "#" meaning no private material is present.
+          if gpg --batch --list-secret-keys --with-colons \
+            | awk -F: '$1=="sec" && $12 ~ /c/ && $15 != "#" {found=1} END{exit !found}'; then
+            echo "::error::The imported secret carries private material for a certify-capable key."
+            exit 1
+          fi
           gpg --list-secret-keys --keyid-format=long
 
       - name: Resolve release tag
