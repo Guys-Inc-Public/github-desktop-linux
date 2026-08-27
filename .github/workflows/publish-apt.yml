@@ -103,10 +103,31 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: auto
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
         run: |
+          set -euo pipefail
           mkdir -p repo
-          aws s3 sync "s3://$BUCKET/$PREFIX" repo \
-            --endpoint-url "https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com" || true
+          endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+
+          # This step used to end in `|| true`. A failed pull therefore looked
+          # exactly like an empty repository: reprepro would add the one incoming
+          # package, export, and the sync would overwrite dists/ with a
+          # single-package index. Every previously published version silently
+          # stops being listed, and the run stays green.
+          #
+          # So: let a genuine failure fail, and separately catch the case where
+          # the remote has content but nothing arrived - which a zero exit code
+          # alone would not reveal.
+          remote=$(aws s3 ls "s3://$BUCKET/$PREFIX/" --recursive --endpoint-url "$endpoint" | wc -l)
+          aws s3 sync "s3://$BUCKET/$PREFIX" repo --endpoint-url "$endpoint" --no-progress
+          pulled=$(find repo -type f | wc -l)
+          echo "remote objects: $remote, pulled: $pulled"
+
+          if [ "$remote" -gt 0 ] && [ "$pulled" -eq 0 ]; then
+            echo "::error::Remote holds $remote objects but none were pulled. Refusing to"
+            echo "::error::republish, which would drop every existing package from the index."
+            exit 1
+          fi
 
       - name: Prepare reprepro config
         run: |
