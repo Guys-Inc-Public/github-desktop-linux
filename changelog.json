@@ -1,6 +1,6 @@
 {
   "releases": {
-    "3.4.10": [
+    "3.5.0": [
       "[Added] Sign in to GitHub.com using the OAuth device flow: Desktop shows a one-time code to enter in your browser, instead of handing off through a redirect",
       "[Fixed] The published packages no longer contain an OAuth client secret. Desktop authenticates as a public client, so no secret is built into the application",
       "[Improved] Upgrade Electron to v39.8.10, from v32.1.2, picking up seven major versions of Chromium security fixes",
