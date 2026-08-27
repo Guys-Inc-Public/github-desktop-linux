@@ -24,7 +24,7 @@ jobs:
     name: Ubuntu arm64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: ${{ inputs.repository || github.repository }}
           ref: ${{ inputs.ref }}
@@ -36,7 +36,7 @@ jobs:
       - name: Check build artifacts for leaked secrets
         run: ./script/check-build-secrets.sh
       - name: Upload output artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ubuntu-arm64-artifacts
           path: |
@@ -50,7 +50,7 @@ jobs:
     name: Ubuntu arm
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: ${{ inputs.repository || github.repository }}
           ref: ${{ inputs.ref }}
@@ -62,7 +62,7 @@ jobs:
       - name: Check build artifacts for leaked secrets
         run: ./script/check-build-secrets.sh
       - name: Upload output artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ubuntu-arm-artifacts
           path: |
@@ -76,7 +76,7 @@ jobs:
     name: Ubuntu x64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: ${{ inputs.repository || github.repository }}
           ref: ${{ inputs.ref }}
@@ -88,7 +88,7 @@ jobs:
       - name: Check build artifacts for leaked secrets
         run: ./script/check-build-secrets.sh
       - name: Upload output artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ubuntu-amd64-artifacts
           path: |
@@ -109,16 +109,16 @@ jobs:
       id-token: write      # mint the short-lived Sigstore identity
       attestations: write  # record the provenance attestation
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Use Node.js 20.17.0
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 20.17.0
           cache: yarn
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: './artifacts'
 
@@ -165,7 +165,7 @@ jobs:
           echo "---"
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: GitHub Desktop for Linux ${{ env.RELEASE_TAG_WITHOUT_PREFIX }}
           body_path: script/release_notes.txt
