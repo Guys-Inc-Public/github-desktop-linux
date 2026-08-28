@@ -1,27 +1,29 @@
 // Sign in uses the OAuth device flow: the user is shown a short code to type
 // into their browser. The code has to be effortless to read and transcribe, so
 // it gets a monospace face, generous tracking and a lot of size.
-.sign-in-form {
-  .device-flow-instructions {
-    margin-bottom: var(--spacing);
-    color: var(--text-secondary-color);
-  }
+//
+// Deliberately not scoped to a container. The code is shown from two places -
+// the welcome flow's form and the sign-in dialog - and scoping this to the
+// first is what left the second with no styles for it at all.
+.device-flow-instructions {
+  margin-bottom: var(--spacing);
+  color: var(--text-secondary-color);
+}
 
-  .device-flow-user-code {
-    font-family: var(--font-family-monospace);
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-semibold);
+.device-flow-user-code {
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
 
-    // Digits and letters are easy to confuse when they're packed together.
-    letter-spacing: 0.2em;
-    text-align: center;
-    user-select: text;
+  // Digits and letters are easy to confuse when they're packed together.
+  letter-spacing: 0.2em;
+  text-align: center;
+  user-select: text;
 
-    padding: var(--spacing) var(--spacing-double);
-    margin-bottom: var(--spacing-double);
+  padding: var(--spacing) var(--spacing-double);
+  margin-bottom: var(--spacing-double);
 
-    border: var(--base-border);
-    border-radius: var(--border-radius);
-    background: var(--box-alt-background-color, var(--box-background-color));
-  }
+  border: var(--base-border);
+  border-radius: var(--border-radius);
+  background: var(--box-alt-background-color, var(--box-background-color));
 }
