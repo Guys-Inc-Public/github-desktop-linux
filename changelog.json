@@ -1,5 +1,8 @@
 {
   "releases": {
+    "3.5.1": [
+      "[Fixed] The sign-in code is now shown when signing in from inside the app. Only the first-run welcome flow displayed it, so re-authenticating opened a browser asking for a code that was never on screen"
+    ],
     "3.5.0": [
       "[Added] Sign in to GitHub.com using the OAuth device flow: Desktop shows a one-time code to enter in your browser, instead of handing off through a redirect",
       "[Fixed] The published packages no longer contain an OAuth client secret. Desktop authenticates as a public client, so no secret is built into the application",

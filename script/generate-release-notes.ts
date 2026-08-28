@@ -213,6 +213,14 @@ function formatReleaseNote(note: ReleaseNoteEntry): string {
   return template.trim()
 }
 
+/**
+ * Empty sections are omitted rather than rendered with a "TODO" placeholder.
+ *
+ * The placeholder was a prompt for whoever edited the draft release by hand.
+ * These notes are published without that pass, so an empty section reached
+ * users as a literal "## Improved / TODO" - a patch release that fixes one
+ * thing genuinely has nothing under the other headings.
+ */
 function renderSection(
   name: string,
   items: Array<ReleaseNoteEntry>,
@@ -241,7 +249,7 @@ function generateDraftReleaseNotes(
   return `
 ${renderSection('New', releaseNotesGroups.new)}
 ${renderSection('Added', releaseNotesGroups.added)}
-${renderSection('Fixed', releaseNotesGroups.fixed, false)}
-${renderSection('Improved', releaseNotesGroups.improved, false)}
+${renderSection('Fixed', releaseNotesGroups.fixed)}
+${renderSection('Improved', releaseNotesGroups.improved)}
 ${renderSection('Removed', releaseNotesGroups.removed)}`
 }
