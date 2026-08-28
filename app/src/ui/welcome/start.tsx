@@ -7,6 +7,7 @@ import * as octicons from '../octicons/octicons.generated'
 import { Button } from '../lib/button'
 import { Loading } from '../lib/loading'
 import { BrowserRedirectMessage } from '../lib/authentication-form'
+import { Ref } from '../lib/ref'
 import { SamplesURL } from '../../lib/stats'
 
 /**
@@ -20,6 +21,15 @@ interface IStartProps {
   readonly advance: (step: WelcomeStep) => void
   readonly dispatcher: Dispatcher
   readonly loadingBrowserAuth: boolean
+
+  /**
+   * The device flow verification, once GitHub has issued one. Present means
+   * there is a code on screen for the user to type into their browser.
+   */
+  readonly deviceFlow?: {
+    readonly userCode: string
+    readonly verificationURI: string
+  }
 }
 
 /** The first step of the Welcome flow. */
@@ -35,17 +45,7 @@ export class Start extends React.Component<IStartProps, {}> {
           <h1 className="welcome-title">
             Welcome to <span>GitHub Desktop</span>
           </h1>
-          {!this.props.loadingBrowserAuth ? (
-            <>
-              <p id="start-description" className="welcome-text">
-                GitHub Desktop is a seamless way to contribute to projects on
-                GitHub and GitHub Enterprise. Sign in below to get started with
-                your existing projects.
-              </p>
-            </>
-          ) : (
-            <p>{BrowserRedirectMessage}</p>
-          )}
+          {this.renderIntroOrCode()}
 
           <div className="welcome-main-buttons">
             <Button
@@ -104,6 +104,42 @@ export class Start extends React.Component<IStartProps, {}> {
           </p>
         </div>
       </section>
+    )
+  }
+
+  /**
+   * Before sign in starts, explain what this is. Once a device code exists,
+   * show it - it is the only thing standing between the user and being signed
+   * in, and it appears nowhere else in this flow.
+   */
+  private renderIntroOrCode() {
+    const { loadingBrowserAuth, deviceFlow } = this.props
+
+    if (deviceFlow) {
+      return (
+        <>
+          <p className="device-flow-instructions">
+            Enter this code at <Ref>{deviceFlow.verificationURI}</Ref> to finish
+            signing in. Keep this window open — it'll continue automatically
+            once you approve.
+          </p>
+          <div className="device-flow-user-code" role="status">
+            {deviceFlow.userCode}
+          </div>
+        </>
+      )
+    }
+
+    if (loadingBrowserAuth) {
+      return <p>{BrowserRedirectMessage}</p>
+    }
+
+    return (
+      <p id="start-description" className="welcome-text">
+        GitHub Desktop is a seamless way to contribute to projects on GitHub and
+        GitHub Enterprise. Sign in below to get started with your existing
+        projects.
+      </p>
     )
   }
 

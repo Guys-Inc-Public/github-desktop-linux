@@ -137,17 +137,25 @@ export class Welcome extends React.Component<IWelcomeProps, IWelcomeState> {
     switch (step) {
       case WelcomeStep.Start:
       case WelcomeStep.SignInToDotComWithBrowser:
-        const loadingBrowserAuth =
+        const authenticating =
           step === WelcomeStep.SignInToDotComWithBrowser &&
           signInState !== null &&
-          signInState.kind === SignInStep.Authentication &&
-          signInState.loading
+          signInState.kind === SignInStep.Authentication
+
+        const loadingBrowserAuth = authenticating && signInState.loading
+
+        // Sign in is the OAuth device flow, so there is a code the user has to
+        // type into their browser. This is the only component rendered for
+        // dotcom sign-in, so if it is not handed the code there is nowhere for
+        // the code to appear.
+        const deviceFlow = authenticating ? signInState.deviceFlow : undefined
 
         return (
           <Start
             advance={this.advanceToStep}
             dispatcher={this.props.dispatcher}
             loadingBrowserAuth={loadingBrowserAuth}
+            deviceFlow={deviceFlow}
           />
         )
 
