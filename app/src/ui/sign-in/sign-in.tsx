@@ -36,9 +36,8 @@ const DefaultTitle = 'Sign in'
 
 const browserSignInInfoContent = (
   <p>
-    Your browser will redirect you back to GitHub Desktop once you've signed in.
-    If your browser asks for your permission to launch GitHub Desktop, please
-    allow it.
+    Your browser will open so you can approve this sign-in. Come back here for
+    the code you'll need to enter.
   </p>
 )
 
@@ -188,10 +187,28 @@ export class SignIn extends React.Component<ISignInProps, ISignInState> {
         </p>
       ) : undefined
 
+    // Sign in is the OAuth device flow: the user has to type a short code into
+    // their browser, so this is the one place it can be read from. Until the
+    // code arrives there is nothing to show but what is about to happen.
+    const { deviceFlow } = state
+
     return (
       <DialogContent>
         {credentialHelperInfo}
-        {browserSignInInfoContent}
+        {deviceFlow ? (
+          <>
+            <p className="device-flow-instructions">
+              Enter this code at <Ref>{deviceFlow.verificationURI}</Ref> to
+              finish signing in. Keep this window open — it'll continue
+              automatically once you approve.
+            </p>
+            <div className="device-flow-user-code" role="status">
+              {deviceFlow.userCode}
+            </div>
+          </>
+        ) : (
+          browserSignInInfoContent
+        )}
       </DialogContent>
     )
   }
