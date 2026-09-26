@@ -57,6 +57,8 @@ echo "deb [signed-by=/etc/apt/keyrings/guysinc-apt.gpg] https://apt.guysinc.pub/
 sudo apt update && sudo apt install github-desktop
 ```
 
+The same steps with checksums for direct downloads, plus `.rpm` and AppImage instructions, are on the install guide at [guysinc.pub/install.html](https://guysinc.pub/install.html).
+
 The repository is GPG-signed; the fingerprint to verify is
 `F45B B6D3 4D82 EF56 BB97 FBE0 F305 FB33 592B 46C8`.
 
